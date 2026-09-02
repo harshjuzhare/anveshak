@@ -22,18 +22,46 @@ await connectDB();
 const app = express();
 
 app.use(helmet());
-app.use(cors({ origin: process.env.CLIENT_URL || "*", credentials: true }));
+
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || "*",
+    credentials: true,
+  })
+);
+
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(mongoSanitize());
-app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
-// Rate limit: generous for reads, applied globally to the API surface
-const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 500, standardHeaders: true, legacyHeaders: false });
+// Clean request logging
+if (process.env.NODE_ENV !== "production") {
+  app.use(
+    morgan("dev", {
+      skip: (req, res) => res.statusCode === 304,
+    })
+  );
+}
+
+// Rate limit
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 500,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 app.use("/api", limiter);
 
-app.get("/api/health", (req, res) => res.json({ status: "ok", timestamp: new Date().toISOString() }));
+// Health check
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+  });
+});
 
+// API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/complaints", complaintRoutes);
 app.use("/api/departments", departmentRoutes);
@@ -41,8 +69,15 @@ app.use("/api/staff", staffRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/reports", reportRoutes);
 
+// Error handling
 app.use(notFound);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`CivicAI server running on port ${PORT}`));
+
+app.listen(PORT, () => {
+  console.log("----------------------------------------");
+  console.log("CivicAI Backend");
+  console.log(`Server running on port ${PORT}`);
+  console.log("----------------------------------------");
+});
