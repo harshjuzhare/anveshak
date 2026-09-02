@@ -71,7 +71,16 @@ civicai/
 
 ## Running locally
 
-### 1. Frontend
+### 1. Backend
+```bash
+cd server
+cp .env.example .env      # fill in MONGO_URI, JWT_SECRET, GEMINI_API_KEY, Cloudinary keys
+npm install
+npm run seed               # loads demo departments/officers/workers/citizens/complaints
+npm run dev                 # starts on http://localhost:5000
+```
+
+### 2. Frontend
 ```bash
 cd client
 cp .env.example .env
@@ -79,7 +88,7 @@ npm install
 npm run dev                 # starts on http://localhost:5173 (proxies /api to :5000)
 ```
 
-### 2. Demo credentials (after `npm run seed`)
+### 3. Demo credentials (after `npm run seed`)
 | Role | Email | Password |
 |---|---|---|
 | Admin | admin@civicai.gov.in | Admin@123 |
@@ -90,6 +99,18 @@ npm run dev                 # starts on http://localhost:5173 (proxies /api to :
 | Citizen | citizen1@example.com | Citizen@123 |
 | Citizen | citizen2@example.com | Citizen@123 |
 
+**Change these before any real deployment.**
+
+## Configuring external services
+
+- **MongoDB Atlas**: create a free cluster, add a database user, whitelist your IP (or
+  0.0.0.0/0 for dev), and paste the connection string into `MONGO_URI`.
+- **Google Gemini**: get a key at https://aistudio.google.com/apikey and set `GEMINI_API_KEY`.
+  Without it, the app runs `services/aiService.js`'s keyword-based fallback classifier so the
+  whole workflow still works for demos.
+- **Cloudinary**: create a free account, grab cloud name/API key/secret from the dashboard.
+- **Maps**: the frontend uses Leaflet + OpenStreetMap tiles by default (no key required). Swap
+  `VITE_MAP_TILE_URL` for Mapbox/Google tiles if you have a key.
 
 ## Complaint workflow (state machine)
 
